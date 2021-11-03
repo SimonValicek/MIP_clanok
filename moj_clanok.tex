@@ -1,0 +1,162 @@
+\documentclass[10pt,twoside,slovak,letter]{article}
+\usepackage[slovak]{babel}
+
+\usepackage[IL2]{fontenc} 
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{url} % príkaz \url na formátovanie URL
+\usepackage{hyperref} % odkazy v texte budú aktívne (pri niektorých triedach dokumentov spôsobuje posun textu)
+
+\usepackage{cite}
+
+
+
+\title{Detekcia objektov v medicínskom zobrazení\thanks{Semestrálny projekt v predmete Metódy inžinierskej práce, ak. rok 2015/16, vedenie: Meno Priezvisko}} % meno a priezvisko vyučujúceho na cvičeniach
+
+\author{Šimon Valíček\\[2pt]
+	{\small Slovenská technická univerzita v Bratislave}\\
+	{\small Fakulta informatiky a informačných technológií}\\
+	{\small \texttt{xvaliceks@stuba.sk}}
+	}
+
+\date{\small 6.11.2021} % upravte
+
+
+
+\begin{document}
+\maketitle
+\section{Úvod}
+V bežnej praxi si pod pojmom detekcia objektov, vieme predstaviť rozoznávanie rôznych, tvarov, znakov, farieb, pričom ako nástroj na detekciu nám slúži ľudské oko. S vývojom vedy a techniky vznikla snaha o vytvorenie modelu, ktorý by fungoval na báze tohto zmyslového orgánu. V dnešnej dobe, natrafíme na detekciu objektov pomocou počítačového zobrazenia na dennej báze, či už ide o snímanie QR kódov, rozoznávanie evidenčných čísiel vozidiel, alebo obyčajné skenovanie dokumentov pomocou tlačiarne. Tento článok sa bude venovať využitiu detekcie objektov v medicíne, kde výstupom takýchto „skenov“ budú rontgenové a CT snímky, alebo snímky z magnetickej rezonancie. Veda, ktorá sa týmto pojmom zaoberá sa nazýva radiológia. V prvej kapitole si v krátkosti povieme o druhoch takýchto snímok a rozdielmi medzi nimi. V ďalších kapitolách sa budeme venovať vysvetleniu základných pojmov a následne princípu fungovania takzvanej detekcie objektov. Na záver si povieme niečo o probléme využitia tejto metódy v medicíne.\cite{T-Huang}
+\section{Medicínske zobrazenie}\label{nejaka}
+Prvým druhom, ktorý si predstavíme sú rontgenové snímky. Tie fungujú na báze elektromagnetického žiarenia, prechádzajúceho ľudským telom, ktoré sa skladá z častí rôznej hustoty a štruktúry. Na základe toho sú tieto elektromagnetické vlny rôznej dĺžky, podľa čoho sa dá jasne určiť, o akú zložku ľudského tela sa jedná. Zložky s hustejším zložením a štruktúrou pohlcujú tieto vlny a následne sa pomocou nich vytvorí obraz, pričom tieto sú na výslednej snímke zobrazené bielou farbou (kosti, zuby...). Naopak tie, ktorých obsah je tvorený materiálom nižšej hustoty, sú na snímke zobrazené čiernou farbou, respektíve tmavou (orgány, svaly, podkožné tukové bunky...). Na základe vyššie uvedeného, rontgen sa v medicíne využíva predovšetkým na identifikáciu zlomenín, fraktúr, či prasklín kostry človeka, ale taktiež v dentálnej medicíne. 
+
+Ďalším, o niečo zložitejším, druhom sú snímky CT (z anglického Computer tomography). Tie sú vytvárané pomocou širšej siete elektromagnetických lúčov, ktoré sú umiestnené v rôznych uhloch a následného spracovania elektromagnetických vĺn rôznych dĺžok pomocou počítaču. Táto metóda sa používa predovšetkým na detekciu hladkého svalového tkaniva (orgánov) a následne na určenie jeho diagnózy. 
+
+Tretím spôsobom je magnetická rezonancia. Tá využíva silné magnetické polia a rádiové vlny na vytvorenie 3D obrazu. Jej najčastejšie využitie je identifikácia nádorov na mozgu.
+\section{Neurónová sieť}\label{nejaka:ina}
+Pojem, ktorým sa označuje výpočtový model, používaný v oblasti umelej inteligencie. Jej základnou stavebnou jednotkou je neurón, ktorý má x vstupov a výstup y. Neuróny sú spájané do vrstiev, tak, že vstup jedného neurónu je zároveň výstupom iného.\cite{Goodfellow-et-al-2016}
+\begin{equation}
+y=b+\sum_{i=0}^{m} {(w_i*x_i)}
+\end{equation}
+kde:
+\begin{itemize}
+\item b - konštanta
+\item w - hodnota vstupu
+\end{itemize}
+\subsection{Aplikovaná nelineárna funkcia}
+Pre aplikovanú nelineárnu funkciu f a výstup neurónov o z vrstvy n-1, bude Z reprezentovať vstup neurónov do vrstvy n.\cite{Goodfellow-et-al-2016}
+\begin{equation}
+Z=f(o)
+\end{equation}
+\subsection{Výpadková funkcia}
+Jej význam spočíva v meraní neusporiadanosti. Najčastejšie používaná funkcia je krížová-entropická.\cite{Goodfellow-et-al-2016}
+\begin{equation}
+Loss(y,\hat{y})=-\sum_{i=1}^{M} {y_i*ln(\hat{y}_i)}
+\end{equation}
+kde:
+\begin{itemize}
+\item y - pole pravdy
+\item \^{y} - náš predpoklad
+\item M - počet tried
+\end{itemize}
+\subsection{Algoritmus spätného šírenia chýb}\footnote{Kapitola 3.3 ešte nie je dokončená}
+\begin{equation}
+\theta_j=\theta_j - \alpha * \frac{\partial}{\partial\theta_j} Loss(y,\hat{y})
+\end{equation}
+kde $\alpha$  udáva zmenu parametra $\theta_j$, v závislosti od derivátu výpadkovej funkcie Loss(y,\^{y})
+\subsection{Regulácia}
+V danej oblasti, ktorou sa článok zaoberá existuje mnoho softwarových modelov. Nie všetky však fungujú na rovnakej báze. Dobrý model, by mal fungovať na princípe generalizácie, tzn., že by sa mal správať rovnako pri použití skúšobných vstupných dát, ako aj pri použití vstupných dát, s ktorými predtým nepracoval. Častý problémom v tejto oblasti je výskyt modelov, ktoré sú príliš prispôsobené skúšobným dátam, na ktorých je testovaná ich správnosť, že po zadaní iných vstupných hodnôt vykazujú nesprávne výsledky. Aby sa predišlo tomuto problému, existuje niekoľko regulačných techník. Najčastejšie používané regulačné metódy sú L1 a L2.\cite{Goodfellow-et-al-2016}
+\begin{equation}
+L1 : Loss(y,\hat{y})+\lambda\sum_{i=1}^{n} \vert{w_i}\vert
+\end{equation}
+\begin{equation}
+L2 : Loss(y,\hat{y})=\lambda\sum_{i=1}^{n} {w_i^2}
+\end{equation}
+\section{Konvolučná neurónová sieť}\label{nejaka:ina}
+Z predošlého textu už vieme, čo je to neurónová sieť a ako funguje. Najčastejšie používaným druhom v počítačovej problematike je takzvaná konvolučná neurónová sieť. Funguje na princípe viacerých vrstiev, pričom každá vrstva je zastúpená maticou pixelov. Jej vstupom je obrázok s tromi parametrami: výška, šírka a hĺbka. Vstupné parametre šírka a výška sú rozmery snímky v pixeloch a hĺbka je množina farieb, respektíve počet farebných kanálov, s ktorými daná snímka pracuje. Vo väčšine prípadov sa používajú farebné kanály RGB (RedGreenBlue), čo predstavuje hĺbku tri.
+\subsection{Konvolúcia}
+Na nasledujúcich obrázkoch si vysvetlíme, ako metóda konvolúcie funguje.
+\begin{figure}[!tbp]
+  \centering
+  \begin{minipage}[b]{0.4\textwidth}
+    \includegraphics[width=\textwidth]{image.png}
+    \caption{\cite{Artificial-Intelligence-Deep-Learning-NLP}}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.4\textwidth}
+    \includegraphics[width=\textwidth]{image.png}
+    \caption{\cite{Artificial-Intelligence-Deep-Learning-NLP}}
+  \end{minipage}
+\end{figure}
+
+Máme zelenú maticu (matica nášho vstupného obrázku), zloženú z pixelov s hodnotami 0 a 1 (veľké čísla v strede štvorčekov) a oranžovú maticu (tzv. filter) zloženú z prvkov 0 a 1 (malé čísla v pravom dolnom rohu v oranžových štvorčekoch). Naľavo je naša matica výstupu o veľkosti 9 políčok. Naše krokovanie pre tento príklad bude 1. To znamená že do prvého políčka našej výstupnej matice (označené ružovou farbou), zapíšeme súčet súčinov jednotlivých políčok zelenej a oranžovej matice. Pre obrázok číslo 1 to bude (kvôli väčšej prehľadnosti píšem zátvorky):
+\begin{equation}
+(1*1)+(1*0)+(1*1)+(0*0)+(1*1)+(1*0)+(0*1)+(0*0)+(1*1)=4
+\end{equation}
+Do prvého štvorčeka našej výstupnej matice zapíšeme číslo 4 a pokračujeme ďalej na obrázok číslo dva, kde uplatníme rovnaký postup a pokračovali by sme tak až dovtedy, kým sa nevyplní celá výstupná matica. Pre úplnosť treba dodať, že krokovanie 1 v našom prípade znamená, že sa po vykonaní tohto súčtu posunieme vždy s oranžovou maticou o jeden stĺpec naľavo po zelenej matici. V prípade, že prídeme na ľavý okraj zelenej matice, posunieme sa o riadok nižšie a pokračujeme zľava doprava. V konečnom dôsledku môžeme povedať že výsledkom konvolúcie obrázka filtrom je aktivačná mapa.\cite{Artificial-Intelligence-Deep-Learning-NLP}
+\subsection{Aktivačná vrstva}
+Na každú takto vytvorenú maticu je následne aplikovaná nelineárna aktivačná vrstva. Väčšina počítačových architektúr pracuje s funkciou ReLU. Jej zápis je nasledovný:\cite{Artificial-Intelligence-Deep-Learning-NLP}
+\begin{equation}
+f(x)=max(0,x)
+\end{equation}
+\subsection{Združovanie}
+V treťom kroku, po prevedení konvolúcie a vykonaní ReLU operácie nastáva združovanie. Funguje na princípe zmenšenia dimenzionality jednotlivých matíc, no zachováva nadôležitejšie hodnoty. Poznáme viacero variant združovania, medzi ktoré patrí napríklad, maximálne, priemerné, alebo súčtové. Na nasledujúcom príklade si ukážeme princíp maximálneho združovania. Tu použijeme krokovanie 2, čiže posúvame filter po mape vždy po dvoch políčkach.
+\begin{figure}[!tbp]
+\centering
+\includegraphics[scale=0.9]{image3.png}
+\caption{\cite{Artificial-Intelligence-Deep-Learning-NLP}}
+\end{figure}
+Na podobnom princípe pracujú aj ostatné typy združenia, s tým, že z danej matice prevezmú hodnotu, na ktorú sú nastavené (priemer, súčet...) a zapíšu ju do novovytvorenej zmenšenej matice.
+\cite{Artificial-Intelligence-Deep-Learning-NLP}
+\section{Princíp neistoty}\label{nejaka:ina}
+Napriek veľkému pokroku v detekcii objektov sa ich vyhodnocovanie v oblasti medicíny prevádza manuálne. Ľudsky povedané, stroj vykoná snímku, no výstup vyhodnocuje lekár. Hlavným dôvodom je, že ide o vysokorizikovú oblasť, kde môže ľahko prísť ku chybe, ktorá by mala tragické následky. Aby sa v budúcnosti dalo.................
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\bibliography{zdroje}
+\bibliographystyle{plain}
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
